@@ -48,14 +48,22 @@ export const storeSeedHandler = async (
   res: Response
 ): Promise<void> => {
   const { homedir } = os.userInfo();
-  const { data, password, email } = req.body;
-  if (!data || !password) {
+  console.log(req.body);
+  const { encData, unencData, password, email } = req.body;
+  if (!encData || !password) {
     return sendErrorResponse(res, "Seed and password are required", httpStatus.BAD_REQUEST);
   }
   try {
-    const encryptedData = encryptData(data, password);
+    const encryptedData = encryptData(encData, password);
     const filePath = path.join(homedir, `${email}.json`);
-    await fs.writeFile(filePath, JSON.stringify(encryptedData));
+    
+    // Store both encrypted data and unencrypted data
+    const dataToStore = {
+      ...encryptedData,
+      unencData // Store unencrypted data as plain text
+    };
+    
+    await fs.writeFile(filePath, JSON.stringify(dataToStore));
 
     res.status(httpStatus.CREATED).json({ message: "Seed stored successfully" });
   } catch (error) {
@@ -125,12 +133,37 @@ export const getPrivateKeyHandler = async (
     const filePath = path.join(homedir, `${email}.json`);
     const encryptedDataStr = await fs.readFile(filePath, "utf8");
     const encryptedData = JSON.parse(encryptedDataStr);
-    const decryptedData = decryptData(encryptedData, password);
-    const seed = decryptedData.seed;
+    const seed = decryptData(encryptedData, password);
     const privateKey = ethers.Wallet.fromPhrase(seed).privateKey;
-    res.status(httpStatus.OK).json({ privateKey });
+    res.status(httpStatus.OK).json(privateKey);
   } catch (error) {
     sendErrorResponse(res, "Failed to retrieve private key", httpStatus.BAD_REQUEST);
   }
 };
 
+export const existWalletHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { email } = req.body;
+  const { homedir } = os.userInfo();
+  const filePath = path.join(homedir, `${email}.json`);
+  const exists = await fs.access(filePath).then(() => true).catch(() => false);
+  res.status(httpStatus.OK).json(exists);
+};
+
+export const getAddressHandler = async (req: Request, res: Response): Promise<void> => {
+  const { email } = req.params;
+  const { homedir } = os.userInfo();
+  const filePath = path.join(homedir, `${email}.json`);
+  
+  try {
+    const fileData = await fs.readFile(filePath, "utf8");
+    const jsonData = JSON.parse(fileData);
+    const address = jsonData.unencData;
+    
+    res.status(httpStatus.OK).json(address);
+  } catch (error) {
+    sendErrorResponse(res, "Failed to retrieve address", httpStatus.BAD_REQUEST);
+  }
+}
