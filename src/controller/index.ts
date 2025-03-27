@@ -49,13 +49,13 @@ export const storeSeedHandler = async (
 ): Promise<void> => {
   const { homedir } = os.userInfo();
   console.log(req.body);
-  const { encData, unencData, password, email } = req.body;
+  const { encData, unencData, password } = req.body;
   if (!encData || !password) {
     return sendErrorResponse(res, "Seed and password are required", httpStatus.BAD_REQUEST);
   }
   try {
     const encryptedData = encryptData(encData, password);
-    const filePath = path.join(homedir, `${email}.json`);
+    const filePath = path.join(homedir, `dwat.json`);
     
     // Store both encrypted data and unencrypted data
     const dataToStore = {
@@ -76,15 +76,14 @@ export const getSeedHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { email, password } = req.body;
-  console.log("email", email);
+  const { password } = req.body;
   console.log("password", password);
-  if (!email || !password) {
-    return sendErrorResponse(res, "Email and password are required", httpStatus.BAD_REQUEST);
+  if (!password) {
+    return sendErrorResponse(res, "Password is required", httpStatus.BAD_REQUEST);
   }
   try {
     const { homedir } = os.userInfo();
-    const filePath = path.join(homedir, `${email}.json`);
+    const filePath = path.join(homedir, `dwat.json`);
     const encryptedDataStr = await fs.readFile(filePath, "utf8");
     const encryptedData = JSON.parse(encryptedDataStr);
 
@@ -99,13 +98,13 @@ export const storeConfirmHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return sendErrorResponse(res, "Email and password are required", httpStatus.BAD_REQUEST);
+  const { password } = req.body;
+  if (!password) {
+    return sendErrorResponse(res, "Password is required", httpStatus.BAD_REQUEST);
   }
   try {
     const { homedir } = os.userInfo();
-    const filePath = path.join(homedir, `${email}.json`);
+    const filePath = path.join(homedir, `dwat.json`);
     const encryptedDataStr = await fs.readFile(filePath, "utf8");
     const encryptedData = JSON.parse(encryptedDataStr);
     
@@ -124,13 +123,13 @@ export const getPrivateKeyHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return sendErrorResponse(res, "Email and password are required", httpStatus.BAD_REQUEST);
+  const { password } = req.body;
+  if (!password) {
+    return sendErrorResponse(res, "Password is required", httpStatus.BAD_REQUEST);
   }
   try {
     const { homedir } = os.userInfo();
-    const filePath = path.join(homedir, `${email}.json`);
+    const filePath = path.join(homedir, `dwat.json`);
     const encryptedDataStr = await fs.readFile(filePath, "utf8");
     const encryptedData = JSON.parse(encryptedDataStr);
     const seed = decryptData(encryptedData, password);
@@ -142,20 +141,18 @@ export const getPrivateKeyHandler = async (
 };
 
 export const existWalletHandler = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
-  const { email } = req.body;
   const { homedir } = os.userInfo();
-  const filePath = path.join(homedir, `${email}.json`);
+  const filePath = path.join(homedir, `dwat.json`);
   const exists = await fs.access(filePath).then(() => true).catch(() => false);
   res.status(httpStatus.OK).json(exists);
 };
 
-export const getAddressHandler = async (req: Request, res: Response): Promise<void> => {
-  const { email } = req.params;
+export const getAddressHandler = async (_req: Request, res: Response): Promise<void> => {
   const { homedir } = os.userInfo();
-  const filePath = path.join(homedir, `${email}.json`);
+  const filePath = path.join(homedir, `dwat.json`);
   
   try {
     const fileData = await fs.readFile(filePath, "utf8");

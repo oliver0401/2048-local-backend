@@ -3,10 +3,8 @@ import cors from "cors";
 import { appRouter } from "./routes";
 import { main } from "./utils/download";
 import https from "https";
-import fs from "fs";
-import path from "path";
 
-// main();
+main();
 
 const app = express();
 const PORT = 8080;
